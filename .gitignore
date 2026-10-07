@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Large Raw Data files (never commit raw data dumps to git)
+data/raw/*.csv
+data/raw/*.zip
+data/raw/*.tar.gz
+data/*.csv
+
+# Database dumps and local storage
+*.sqlite
+*.db
+*.sql.gz
+
+# Environment & IDE
+.env
+.venv/
+env/
+venv/
+.vscode/
+.idea/
+.ipynb_checkpoints/
+*.pbix.temp
+
+# OS specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
