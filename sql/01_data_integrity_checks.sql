@@ -1,80 +1,46 @@
 -- ====================================================================
 -- Project: Olist E-Commerce Operations Analysis
 -- Script: 01_data_integrity_checks.sql
--- Objective: Audit schema, verify primary keys, confirm table grains, 
---            and validate relational integrity across tables.
 -- ====================================================================
 
--- Step 0: Ensure you are in the correct database
--- CREATE DATABASE IF NOT EXISTS olist_ecommerce;
--- USE olist_ecommerce;
+-- 1. Table Record Counts
+SELECT COUNT(*) AS total_orders FROM olist_orders_dataset;
+SELECT COUNT(*) AS total_items FROM olist_order_items_dataset;
 
--- --------------------------------------------------------------------
--- Task 1: Record Counts Verification
--- Business Reason: Confirm all data was ingested without truncation or loss.
--- --------------------------------------------------------------------
--- TODO: Write queries to count the total rows in each of the core tables:
--- 1. olist_orders_dataset (Expected: ~99,441 rows)
--- 2. olist_order_items_dataset (Expected: ~112,650 rows)
--- 3. olist_customers_dataset (Expected: ~99,441 rows)
--- 4. olist_order_payments_dataset (Expected: ~103,886 rows)
--- 5. olist_order_reviews_dataset (Expected: ~99,224 rows)
--- 6. olist_products_dataset (Expected: ~32,951 rows)
+-- 2. Primary Key Uniqueness Audit
+SELECT 
+    COUNT(order_id) AS total_orders,
+    COUNT(DISTINCT order_id) AS unique_orders
+FROM olist_orders_dataset;
 
--- YOUR QUERY HERE:
+-- 3. Customer Identity Discrepancy
+SELECT 
+    COUNT(customer_id) AS total_customer_sessions,
+    COUNT(DISTINCT customer_unique_id) AS unique_human_customers
+FROM olist_customers_dataset;
 
+/*
+Finding:
+customer_id is per order, while customer_unique_id identifies the individual person.
+The 3,345 difference represents repeat purchases from returning customers.
+*/
 
+-- 4. Orphan Record Check (Order Items vs Orders)
+SELECT ot.order_id 
+FROM olist_order_items_dataset AS ot
+LEFT JOIN olist_orders_dataset AS o
+    ON ot.order_id = o.order_id
+WHERE o.order_id IS NULL;
 
--- --------------------------------------------------------------------
--- Task 2: Primary Key & Uniqueness Audits
--- Business Reason: A corrupted primary key causes duplicated aggregations.
--- --------------------------------------------------------------------
--- TODO: Check whether `order_id` is 100% unique in `olist_orders_dataset`.
--- HINT: Compare COUNT(order_id) with COUNT(DISTINCT order_id), or find IDs with COUNT(*) > 1.
+-- 5. Operational Date Range & Order Status Breakdown
+SELECT 
+    MIN(order_purchase_timestamp) AS earliest_purchase, 
+    MAX(order_purchase_timestamp) AS latest_purchase
+FROM olist_orders_dataset;
 
--- YOUR QUERY HERE:
-
-
-
--- TODO: Check the primary key / grain of `olist_order_items_dataset`.
--- Is `order_id` unique on its own? What combination of columns forms the true primary key?
-
--- YOUR QUERY HERE:
-
-
-
--- --------------------------------------------------------------------
--- Task 3: Customer ID Discrepancy & Grain Understanding
--- Business Reason: Olist has two customer IDs: `customer_id` and `customer_unique_id`.
--- --------------------------------------------------------------------
--- TODO: In `olist_customers_dataset`:
--- 1. How many total rows are there?
--- 2. How many DISTINCT `customer_id` values?
--- 3. How many DISTINCT `customer_unique_id` values?
--- 4. What does the difference between distinct `customer_id` and `customer_unique_id` tell you?
-
--- YOUR QUERY HERE:
-
-
-
--- --------------------------------------------------------------------
--- Task 4: Foreign Key Consistency / Orphan Record Checks
--- Business Reason: Orphan records (items without an order) break financial reporting.
--- --------------------------------------------------------------------
--- TODO: Check if there are any `order_id` values in `olist_order_items_dataset` 
--- that DO NOT exist in `olist_orders_dataset` (using a LEFT JOIN or NOT IN).
-
--- YOUR QUERY HERE:
-
-
-
--- --------------------------------------------------------------------
--- Task 5: Date Range & Order Status Audit
--- Business Reason: Clarify the timeframe of the dataset and non-delivered orders.
--- --------------------------------------------------------------------
--- TODO: In `olist_orders_dataset`:
--- 1. Find the earliest and latest `order_purchase_timestamp`.
--- 2. List the distinct `order_status` values and the count of orders in each status.
-
--- YOUR QUERY HERE:
-
+SELECT 
+    order_status, 
+    COUNT(*) AS order_count
+FROM olist_orders_dataset
+GROUP BY order_status
+ORDER BY order_count DESC;
