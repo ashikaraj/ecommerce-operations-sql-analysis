@@ -26,10 +26,10 @@ The 3,345 difference represents repeat purchases from returning customers.
 */
 
 -- 4. Orphan Record Check (Order Items vs Orders)
-SELECT ot.order_id 
-FROM olist_order_items_dataset AS ot
+SELECT oi.order_id 
+FROM olist_order_items_dataset AS oi
 LEFT JOIN olist_orders_dataset AS o
-    ON ot.order_id = o.order_id
+    ON oi.order_id = o.order_id
 WHERE o.order_id IS NULL;
 
 -- 5. Operational Date Range & Order Status Breakdown
