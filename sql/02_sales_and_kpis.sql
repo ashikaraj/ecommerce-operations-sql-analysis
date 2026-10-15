@@ -61,4 +61,26 @@ ORDER BY total_revenue DESC;
 -- --------------------------------------------------------------------
 -- Task 4: The Join Fan-Out Trap (Data Validation Check)
 -
-
+WITH item_totals AS (
+    SELECT 
+        order_id,
+        SUM(price) AS total_price
+    FROM olist_order_items_dataset
+    GROUP BY order_id
+),
+payment_totals AS (
+    SELECT 
+        order_id,
+        SUM(payment_value) AS total_payment
+    FROM olist_order_payments_dataset
+    GROUP BY order_id
+)
+SELECT 
+    ROUND(SUM(it.total_price), 2) AS clean_merchandise_revenue,
+    ROUND(SUM(pt.total_payment), 2) AS clean_payment_revenue
+FROM olist_orders_dataset AS o
+LEFT JOIN item_totals AS it 
+    ON o.order_id = it.order_id
+LEFT JOIN payment_totals AS pt 
+    ON o.order_id = pt.order_id
+WHERE o.order_status = 'delivered';
